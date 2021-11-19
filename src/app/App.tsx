@@ -1,9 +1,9 @@
 import React from 'react';
 
 export const App = () => {
-  return <h1>
-	abobus
-  </h1>
-}
-
-export default App;
+    return (
+        <h1>
+            abobus
+        </h1>
+    );
+};
