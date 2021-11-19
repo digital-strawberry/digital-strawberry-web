@@ -1,9 +1,13 @@
 import React from 'react';
 
+import { CssBaseline, GeistProvider } from "@geist-ui/react";
+import { MainPage } from "../pages";
+
 export const App = () => {
     return (
-        <h1>
-            abobus
-        </h1>
+        <GeistProvider>
+            <CssBaseline />
+            <MainPage />
+        </GeistProvider>
     );
 };
