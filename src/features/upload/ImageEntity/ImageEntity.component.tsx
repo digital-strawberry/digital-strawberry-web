@@ -3,27 +3,71 @@ import { Grid, Spinner } from '@geist-ui/react';
 import { Buffer } from 'buffer';
 import styles from './ImageEntity.module.css';
 import { Steps } from 'shared';
+import ky from 'ky';
 
 export type ImageEntityProps = {
 	file: File;
 	setPreview: (url: string) => void;
 };
 
+enum Stages {
+	Upload,
+	Queued,
+	Detection,
+	Recommendation,
+}
+
+const prefixUrl = 'https://strawberry.ktsd.cc/api';
+
 export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) => {
-	const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
+	const [stage, setStage] = useState<Stages>(Stages.Upload);
+	const [url, setUrl] = useState<string | null>(null);
 
 	useEffect(() => {
 		(async () => {
-			setTimeout(async () => setBuffer(await file.arrayBuffer()), Math.random() * 10000);
+			const form = new FormData();
+			const buffer = await file.arrayBuffer();
+			const blob = new Blob([buffer], {
+				type: file.type,
+			});
+
+			setBuffer(buffer, file.type)
+
+			form.append('image', blob, 'image.jpg')
+
+			try {
+				const { renderedImgUrl } = await ky('predict', {
+					prefixUrl,
+					method: 'POST',
+					body: form,
+				}).json<{ renderedImgUrl: string; }>();
+
+				setStage(Stages.Queued);
+
+				const buffer = await ky(renderedImgUrl.slice(1), {
+					prefixUrl,
+				}).arrayBuffer();
+
+				setStage(Stages.Detection);
+				setBuffer(buffer, 'image/jpeg');
+			}
+			catch (e) {
+				console.error('oh no');
+				console.log(e);
+			}
 		})();
 	}, [file]);
 
 	const handleImageClick = () => {
-		if (!buffer) {
+		if (!url) {
 			return;
 		}
 
-		setPreview('https://cdn.pixabay.com/photo/2020/06/19/21/46/potato-5318958_640.jpg');
+		setPreview(url);
+	};
+
+	const setBuffer = (buffer: ArrayBuffer, type: string) => {
+		setUrl(`data:${type};base64,${Buffer.from(buffer).toString('base64')}`);
 	};
 
 	return (
@@ -31,15 +75,13 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 			<Grid xs={6} onClick={handleImageClick}>
 				<div
 					className={styles.spinner}
-					style={buffer ? {
-						backgroundImage: `url('data:${file.type};base64,${Buffer.from(buffer).toString('base64')}')`,
-					} : {}}
+					style={url ? { backgroundImage: `url('${url}')` } : {}}
 				>
-					{buffer ? null : <Spinner scale={2} />}
+					{url ? null : <Spinner scale={2} />}
 				</div>
 			</Grid>
 			<Grid xs={18}>
-				<Steps index={buffer ? 1 : 0} steps={[
+				<Steps index={stage} steps={[
 					{
 						label: 'Загрузка изображения на сервер',
 					},
@@ -47,10 +89,7 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 						label: 'Ожидание в очереди',
 					},
 					{
-						label: 'Распознование клубники'
-					},
-					{
-						label: 'Оценка здоровья',
+						label: 'Детекция клубники',
 					},
 					{
 						label: 'Подбор рекомендаций',

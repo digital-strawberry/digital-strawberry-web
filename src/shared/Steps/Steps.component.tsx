@@ -14,7 +14,7 @@ export const Steps: React.FC<StepsProps> = ({ index, steps }) => {
 	return (
 		<div className={styles.container}>
 			{steps.map(({ label, comment }, idx) => (
-				<>
+				<React.Fragment key={idx}>
 					<div className={styles.loading}>
 						<div className={styles.indicator}>
 							{idx === index ? <Spinner /> : idx < index ? <Dot type='success' /> : <Dot />}
@@ -25,7 +25,7 @@ export const Steps: React.FC<StepsProps> = ({ index, steps }) => {
 						</span>
 					</div>
 					{idx < index && <div className={styles.description}>{comment}</div>}
-				</>
+				</React.Fragment>
 			))}
 		</div>
 	);

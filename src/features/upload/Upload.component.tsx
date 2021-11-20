@@ -48,7 +48,7 @@ export const Upload: React.FC<UploadProps> = () => {
 
 			<Modal width='720px' visible={visible} onClose={() => setVisible(false)}>
 				<Modal.Content>
-					{previewUrl && <Image src={previewUrl} width={'100%'} />}
+					{previewUrl && <img src={previewUrl} width='100%' alt='strawberry' />}
 				</Modal.Content>
 				<Modal.Action onClick={() => setVisible(false)}>
 					Закрыть
