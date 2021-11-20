@@ -1,0 +1,16 @@
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	min-height: 150px;
+}
+
+.card {
+	transition: outline-color .3s !important;
+	outline: 2px dashed transparent;
+}
+
+.active {
+	outline-color: #adff00;
+}
