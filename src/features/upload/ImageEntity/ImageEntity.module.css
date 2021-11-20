@@ -14,6 +14,7 @@
 .spinner {
 	display: flex;
 	justify-content: center;
+	background-size: cover;
 	/* magic, do not touch */
 	width: 100%;
 	height: 0;

@@ -26,11 +26,12 @@ export const Upload: React.FC<UploadProps> = () => {
 						<Image size={48} />
 						<Text b>Перетащите картинки для анализа</Text>
 						<Text span font={'12px'} type='secondary'>
-							Или нажмите здесь для выбора картинки...
+							Или нажмите здесь для выбора...
 						</Text>
 					</div>
 				</Card>
 			</div>
+
 			{files}
 		</div>
 	);

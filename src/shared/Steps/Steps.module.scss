@@ -1,0 +1,38 @@
+.container {
+	display: flex;
+	flex-direction: column;
+}
+
+.indicator {
+	[class~=label] {
+		margin-left: 0 !important;
+	}
+
+	[class~=icon] {
+		margin-right: -1px;
+	}
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+}
+
+.loading {
+	gap: .5em;
+	display: inline-flex;
+	align-items: center;
+}
+
+.past {
+	font-weight: bold;
+}
+
+.future {
+	opacity: .7;
+}
+
+.description {
+	margin-left: calc(20px + .5em);
+}

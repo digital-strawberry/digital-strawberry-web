@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Page } from '@geist-ui/react';
-import { Upload } from '../../features';
+import { Upload } from 'features';
 
 export type MainPageProps = Record<never, string>;
 
