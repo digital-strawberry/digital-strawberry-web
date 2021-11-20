@@ -1,0 +1,17 @@
+.list {
+	display: flex;
+	flex-direction: column;
+}
+
+.node {
+	display: inline-flex;
+}
+
+.node > * {
+	line-height: 30px;
+}
+
+.node span {
+	width: 30px;
+}
+

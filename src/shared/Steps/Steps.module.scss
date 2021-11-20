@@ -36,3 +36,9 @@
 .description {
 	margin-left: calc(20px + .5em);
 }
+
+.error {
+	@extend .description;
+	font-weight: bold;
+	font-style: italic;
+}

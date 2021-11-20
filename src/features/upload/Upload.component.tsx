@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Card, Modal, Text, Image } from '@geist-ui/react';
-import { Image as ImageIcon } from '@geist-ui/react-icons';
+import { Card, Modal, Text } from '@geist-ui/react';
 import { useDropzone } from 'react-dropzone';
 import { ImageEntity } from './ImageEntity';
 import styles from './Upload.module.css';
@@ -35,7 +34,7 @@ export const Upload: React.FC<UploadProps> = () => {
 				<Card hoverable className={isDragActive ? `${styles.card} ${styles.active}` : styles.card}>
 					<div className={styles.wrapper}>
 						<input {...getInputProps()} />
-						<ImageIcon size={48} />
+						<span className='material-icons md-48'>image</span>
 						<Text b>Перетащите картинки для анализа</Text>
 						<Text span font={'12px'} type='secondary'>
 							Или нажмите здесь для выбора...

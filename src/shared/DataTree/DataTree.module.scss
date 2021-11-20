@@ -1,0 +1,25 @@
+.tree {
+	:global {
+		.icon svg {
+			display: none;
+		}
+
+		.icon::before {
+			font-family: 'Material Icons', serif;
+			font-size: 1.2rem;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.folder > .names > .icon::before {
+			content: 'data_object';
+		}
+
+		.file > .names > .icon::before {
+			content: 'local_offer';
+		}
+	}
+}
