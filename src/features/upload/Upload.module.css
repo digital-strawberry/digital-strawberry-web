@@ -9,6 +9,7 @@
 .card {
 	transition: outline-color .3s !important;
 	outline: 2px dashed transparent;
+	cursor: pointer;
 }
 
 .active {

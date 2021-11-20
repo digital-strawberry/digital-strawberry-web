@@ -6,22 +6,29 @@ import { Steps } from 'shared';
 
 export type ImageEntityProps = {
 	file: File;
+	setPreview: (url: string) => void;
 };
 
-export const ImageEntity: React.FC<ImageEntityProps> = ({ file }) => {
+export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) => {
 	const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
 
 	useEffect(() => {
-		console.log('processing file...', file);
-
 		(async () => {
 			setTimeout(async () => setBuffer(await file.arrayBuffer()), Math.random() * 10000);
 		})();
 	}, [file]);
 
+	const handleImageClick = () => {
+		if (!buffer) {
+			return;
+		}
+
+		setPreview('https://cdn.pixabay.com/photo/2020/06/19/21/46/potato-5318958_640.jpg');
+	};
+
 	return (
 		<Grid.Container gap={1} className={styles.entity}>
-			<Grid xs={6}>
+			<Grid xs={6} onClick={handleImageClick}>
 				<div
 					className={styles.spinner}
 					style={buffer ? {
