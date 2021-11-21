@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Description, Grid, Spinner } from '@geist-ui/react';
+import { Badge, Description, Grid, Spinner, Text } from '@geist-ui/react';
 import { Buffer } from 'buffer';
 import ky from 'ky';
-import styles from './ImageEntity.module.css';
-import { DataNode, DataTree, Steps } from 'shared';
-import { Recommendations } from './Recommendations';
+import styles from './ImageEntity.module.scss';
+import { DataTree, Steps } from 'shared';
+import { Recommendations, RecommendationsProps } from './Recommendations';
 
 export type ImageEntityProps = {
 	file: File;
@@ -12,11 +12,21 @@ export type ImageEntityProps = {
 };
 
 enum Stages {
-	Upload,
-	Queued,
-	Detection,
-	Recommendation,
+	BBoxes,
+	HealthCheck,
+	Done,
 }
+
+type BBoxesResponse = {
+	imgUrl: string;
+	renderedImgUrl: string;
+	predictions: Array<Record<'confidence' | 'maturity' | 'xmax' | 'xmin' | 'ymax' | 'ymin', number>>;
+};
+
+type DiseasesResponse = RecommendationsProps & {
+	health_rate: number;
+	illness_list: string[];
+};
 
 const postData = async <T extends Record<string | number, unknown>>(method: string, buffer: ArrayBuffer, mime: string): Promise<T> => {
 	const prefixUrl = 'https://strawberry.ktsd.cc/api/';
@@ -32,6 +42,7 @@ const postData = async <T extends Record<string | number, unknown>>(method: stri
 		prefixUrl,
 		method: 'POST',
 		body: form,
+		timeout: 60000,
 	}).json() as T;
 
 	for (const key in Object.keys(response)) {
@@ -44,9 +55,9 @@ const postData = async <T extends Record<string | number, unknown>>(method: stri
 };
 
 export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) => {
-	const [stage, setStage] = useState<Stages>(Stages.Upload);
+	const [stage, setStage] = useState<Stages>(Stages.BBoxes);
 	const [url, setUrl] = useState<string | null>(null);
-	const [rawData, setRawData] = useState<DataNode | null>(null);
+	const [rawData, setRawData] = useState<BBoxesResponse & Partial<DiseasesResponse> | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -55,13 +66,16 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 				const buffer = await file.arrayBuffer();
 				setBuffer(buffer, file.type)
 
-				const data = await postData<{ renderedImgUrl: string; predictions: Array<Record<string, number>>; }>(
-					'predictStrawberriesBoundingBoxes', buffer,
-					file.type,
-				);
+				const bboxes = await postData<BBoxesResponse>('predictStrawberriesBoundingBoxes', buffer, file.type);
 
-				setStage(Stages.Queued);
-				setRawData(data);
+				setRawData(bboxes);
+				setStage(Stages.HealthCheck);
+
+				const vibeCheck = await postData<DiseasesResponse>('predictPlantDiseases', buffer, file.type);
+
+				console.log(vibeCheck);
+				setRawData({ ...bboxes, ...vibeCheck });
+				setStage(Stages.Done);
 
 				// const buffer = await ky(data.renderedImgUrl.slice(1), {
 				// 	prefixUrl,
@@ -98,53 +112,64 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 				>
 					{url ? null : <Spinner scale={2} />}
 				</div>
+
+
+				<span>
+					<Badge type='success'>Detection</Badge>
+					<Badge type='success' style={{ backgroundColor: 'transparent' }}>Segmentation</Badge>
+				</span>
 			</Grid>
 			<Grid xs={18}>
 				<Grid.Container gap={1}>
 					<Grid xs={12}>
-						<Description title='Статус обработки' content={
-							<Steps
-								index={stage}
-								error={error}
-								steps={[
+						<div className={styles.column}>
+							<Description title='Статус обработки' content={
+								<Steps
+									index={stage}
+									error={error}
+									steps={[
+										{
+											label: 'Детекция клубники',
+										},
+										{
+											label: 'Оценка здоровья куста',
+										},
+									]}
+								/>
+							} />
+
+							<Description title='Рекомендации по уходу за кустом' content={
+								<Recommendations recommendations={[
 									{
-										label: 'Загрузка изображения на сервер',
+										type: 'air-hi',
+										description: 'too hot',
 									},
 									{
-										label: 'Ожидание в очереди',
+										type: 'hum-lo',
+										description: 'vlaga',
 									},
 									{
-										label: 'Детекция клубники',
-									},
-									{
-										label: 'Подбор рекомендаций',
-									},
-								]}
-							/>
-						} />
+										type: 'azot-lo',
+										description: 'gib azot pls sir'
+									}
+								]} />
+							} />
+						</div>
 					</Grid>
 
 					<Grid xs={12}>
-						<Description title='Сырые данные с сервера' content={rawData ? <DataTree data={rawData} /> : <Spinner />} />
-					</Grid>
+						<div className={styles.column}>
+							<Description
+								title='Уровень здоровья'
+								content={rawData?.health_rate ? (
+									<Text b>{rawData.health_rate.toFixed(1)} %</Text>
+								) : (
+									<Spinner />
+								)}
+							/>
 
-					<Grid xs={24}>
-						<Description title='Рекомендации по уходу за кустом' content={
-							<Recommendations recommendations={[
-								{
-									type: 'air-hi',
-									description: 'too hot',
-								},
-								{
-									type: 'hum-lo',
-									description: 'vlaga',
-								},
-								{
-									type: 'azot-lo',
-									description: 'gib azot pls sir'
-								}
-							]} />
-						} />
+							<Description title='Сырые данные с сервера' content={rawData ? <DataTree data={rawData} /> : <Spinner />} />
+						</div>
 					</Grid>
 				</Grid.Container>
 			</Grid>

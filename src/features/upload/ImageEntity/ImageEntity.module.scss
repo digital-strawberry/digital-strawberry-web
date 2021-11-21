@@ -22,3 +22,12 @@
 	padding-top: calc(100% / 2 - 10px);
 	padding-bottom: calc(100% / 2 + 10px);
 }
+
+.column {
+	display: block;
+	overflow: hidden;
+}
+
+.column > * {
+	margin-bottom: .7em !important;
+}
