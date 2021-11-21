@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Badge, Description, Grid, Spinner, Text } from '@geist-ui/react';
-import { Buffer } from 'buffer';
+import { Description, Grid, Spinner, Text } from '@geist-ui/react';
 import ky from 'ky';
 import styles from './ImageEntity.module.scss';
 import { DataTree, Steps } from 'shared';
 import { Recommendations, RecommendationsProps } from './Recommendations';
+import { Preview } from 'shared';
 
 export type ImageEntityProps = {
 	file: File;
@@ -28,9 +28,9 @@ type DiseasesResponse = RecommendationsProps & {
 	illness_list: string[];
 };
 
-const postData = async <T extends Record<string | number, unknown>>(method: string, buffer: ArrayBuffer, mime: string): Promise<T> => {
-	const prefixUrl = 'https://strawberry.ktsd.cc/api/';
+const prefixUrl = 'https://strawberry.ktsd.cc/api/';
 
+const postData = async <T extends Record<string | number, unknown>>(method: string, buffer: ArrayBuffer, mime: string): Promise<T> => {
 	const form = new FormData();
 	const blob = new Blob([buffer], {
 		type: mime,
@@ -54,35 +54,39 @@ const postData = async <T extends Record<string | number, unknown>>(method: stri
 	return response;
 };
 
+const downloadImageToBuffer = async (url: string): Promise<ArrayBuffer> => {
+	return await ky(url.startsWith('/') ? url.slice(1) : url, {
+		prefixUrl,
+	}).arrayBuffer();
+};
+
 export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) => {
 	const [stage, setStage] = useState<Stages>(Stages.BBoxes);
-	const [url, setUrl] = useState<string | null>(null);
+	const [images, setImages] = useState<[ArrayBuffer?, ArrayBuffer?]>([]);
 	const [rawData, setRawData] = useState<BBoxesResponse & Partial<DiseasesResponse> | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		(async () => {
 			try {
-				const buffer = await file.arrayBuffer();
-				setBuffer(buffer, file.type)
+				const source = await file.arrayBuffer();
+				setImages([source]);
 
-				const bboxes = await postData<BBoxesResponse>('predictStrawberriesBoundingBoxes', buffer, file.type);
+				const bboxes = await postData<BBoxesResponse>('predictStrawberriesBoundingBoxes', source, file.type);
+				const detection = await downloadImageToBuffer(bboxes.renderedImgUrl);
 
 				setRawData(bboxes);
+				setImages([detection]);
 				setStage(Stages.HealthCheck);
 
-				const vibeCheck = await postData<DiseasesResponse>('predictPlantDiseases', buffer, file.type);
+				const vibeCheck = await postData<DiseasesResponse>('predictPlantDiseases', source, file.type);
 
-				console.log(vibeCheck);
+				// let's assume that this is segmentation
+				const segmentation = await downloadImageToBuffer(bboxes.imgUrl);
+
 				setRawData({ ...bboxes, ...vibeCheck });
+				setImages([detection, segmentation]);
 				setStage(Stages.Done);
-
-				// const buffer = await ky(data.renderedImgUrl.slice(1), {
-				// 	prefixUrl,
-				// }).arrayBuffer();
-				//
-				// setStage(Stages.Detection);
-				// setBuffer(buffer, 'image/jpeg');
 			}
 			catch (e) {
 				console.error(e);
@@ -91,33 +95,13 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 		})();
 	}, [file]);
 
-	const handleImageClick = () => {
-		if (!url) {
-			return;
-		}
-
-		setPreview(url);
-	};
-
-	const setBuffer = (buffer: ArrayBuffer, type: string) => {
-		setUrl(`data:${type};base64,${Buffer.from(buffer).toString('base64')}`);
-	};
-
 	return (
 		<Grid.Container gap={2} className={styles.entity}>
-			<Grid xs={6} onClick={handleImageClick}>
-				<div
-					className={styles.spinner}
-					style={url ? { backgroundImage: `url('${url}')` } : {}}
-				>
-					{url ? null : <Spinner scale={2} />}
-				</div>
-
-
-				<span>
-					<Badge type='success'>Detection</Badge>
-					<Badge type='success' style={{ backgroundColor: 'transparent' }}>Segmentation</Badge>
-				</span>
+			<Grid xs={6}>
+				<Preview
+					main={images[0]}
+					secondary={images[1]}
+				/>
 			</Grid>
 			<Grid xs={18}>
 				<Grid.Container gap={1}>
