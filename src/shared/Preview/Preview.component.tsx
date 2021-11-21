@@ -2,13 +2,20 @@ import React, { useMemo, useState } from 'react';
 import { Badge, Spinner } from '@geist-ui/react';
 import { Buffer } from 'buffer';
 import styles from './Preview.module.css';
+import { prefixUrl } from 'config';
 
-type Image = ArrayBuffer | string;
+type Image = ArrayBuffer;
 
 export type PreviewProps = {
 	main?: Image;
 	secondary?: Image;
 };
+
+declare global {
+	interface ArrayBuffer {
+		source?: string;
+	}
+}
 
 const bufferToBase64 = (image?: Image): string | null => {
 	if (image instanceof ArrayBuffer) {
@@ -24,12 +31,14 @@ export const Preview: React.FC<PreviewProps> = ({ main, secondary }) => {
 	const mainUrl = useMemo(() => bufferToBase64(main), [main]);
 	const secondaryUrl = useMemo(() => bufferToBase64(secondary), [secondary]);
 	const selected = (idx === 0 ? mainUrl : secondaryUrl) ?? undefined;
+	const href = (idx === 0 ? main : secondary)?.source?.slice(1);
 
 	return (
 		<div className={styles.wrapper}>
 			<a
 				target='_blank'
-				href={selected}
+				rel='noreferrer'
+				href={href ? prefixUrl + href : undefined}
 				className={styles.wrapper}
 			>
 				<div
@@ -44,6 +53,7 @@ export const Preview: React.FC<PreviewProps> = ({ main, secondary }) => {
 				<div className={styles.badges}>
 					{['Detection', 'Segmentation'].map((key, index) => (
 						<Badge
+							key={index}
 							type='success'
 							style={{ backgroundColor: idx === index ? undefined : 'transparent' }}
 							onClick={() => setIdx(index)}

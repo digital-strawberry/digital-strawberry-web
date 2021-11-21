@@ -6,7 +6,8 @@ export type NavbarProps = Record<never, string>;
 export const Navbar: React.FC<NavbarProps> = () => {
 	return (
 		<nav className={styles.nav}>
-			Digital Strawberry
+			Разметчика не взяли!
+			<span>Digital Strawberry 🍓😏</span>
 		</nav>
 	);
 };
