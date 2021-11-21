@@ -8,7 +8,6 @@ import { Preview } from 'shared';
 
 export type ImageEntityProps = {
 	file: File;
-	setPreview: (url: string) => void;
 };
 
 enum Stages {
@@ -24,8 +23,8 @@ type BBoxesResponse = {
 };
 
 type DiseasesResponse = RecommendationsProps & {
-	health_rate: number;
-	illness_list: string[];
+	healthRate: number;
+	illnessList: string[];
 };
 
 const prefixUrl = 'https://strawberry.ktsd.cc/api/';
@@ -60,7 +59,7 @@ const downloadImageToBuffer = async (url: string): Promise<ArrayBuffer> => {
 	}).arrayBuffer();
 };
 
-export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) => {
+export const ImageEntity: React.FC<ImageEntityProps> = ({ file }) => {
 	const [stage, setStage] = useState<Stages>(Stages.BBoxes);
 	const [images, setImages] = useState<[ArrayBuffer?, ArrayBuffer?]>([]);
 	const [rawData, setRawData] = useState<BBoxesResponse & Partial<DiseasesResponse> | null>(null);
@@ -122,22 +121,16 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 								/>
 							} />
 
-							<Description title='Рекомендации по уходу за кустом' content={
-								<Recommendations recommendations={[
-									{
-										type: 'air-hi',
-										description: 'too hot',
-									},
-									{
-										type: 'hum-lo',
-										description: 'vlaga',
-									},
-									{
-										type: 'azot-lo',
-										description: 'gib azot pls sir'
-									}
-								]} />
-							} />
+							<Description
+								title='Рекомендации по уходу за кустом'
+								content={
+									rawData?.recommendations ? (
+										<Recommendations recommendations={rawData?.recommendations} />
+									) : (
+										<Spinner />
+									)
+								}
+							/>
 						</div>
 					</Grid>
 
@@ -145,8 +138,8 @@ export const ImageEntity: React.FC<ImageEntityProps> = ({ file, setPreview }) =>
 						<div className={styles.column}>
 							<Description
 								title='Уровень здоровья'
-								content={rawData?.health_rate ? (
-									<Text b>{rawData.health_rate.toFixed(1)} %</Text>
+								content={rawData?.healthRate ? (
+									<Text b>{rawData.healthRate.toFixed(1)} %</Text>
 								) : (
 									<Spinner />
 								)}

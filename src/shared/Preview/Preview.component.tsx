@@ -11,14 +11,12 @@ export type PreviewProps = {
 };
 
 const bufferToBase64 = (image?: Image): string | null => {
-	console.log('compute image', image);
-
 	if (image instanceof ArrayBuffer) {
 		const buffer = Buffer.from(image);
-		return `url('data:image/jpeg;base64,${buffer.toString('base64')}')`;
+		return `data:image/jpeg;base64,${buffer.toString('base64')}`;
 	}
 
-	return image ? `url('${image}')` : null;
+	return image ?? null;
 };
 
 export const Preview: React.FC<PreviewProps> = ({ main, secondary }) => {
@@ -29,11 +27,18 @@ export const Preview: React.FC<PreviewProps> = ({ main, secondary }) => {
 
 	return (
 		<div className={styles.wrapper}>
-			<div className={styles.wrapper}>
-				<div className={styles.spinner} style={{ backgroundImage: selected }}>
+			<a
+				target='_blank'
+				href={selected}
+				className={styles.wrapper}
+			>
+				<div
+					className={styles.spinner}
+					style={{ backgroundImage: selected ? `url('${selected}')` : undefined }}
+				>
 					{selected ? null : <Spinner scale={2} />}
 				</div>
-			</div>
+			</a>
 
 			{secondary && (
 				<div className={styles.badges}>
