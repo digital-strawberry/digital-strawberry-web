@@ -11,8 +11,8 @@ export const Upload: React.FC<UploadProps> = () => {
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
 		setFiles(files => [
-			...files,
 			...acceptedFiles.map(file => <ImageEntity key={file.name} file={file} />),
+			...files,
 		]);
 	}, []);
 
